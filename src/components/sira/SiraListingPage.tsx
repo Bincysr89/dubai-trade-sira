@@ -172,7 +172,7 @@ function RequestCard({ row, selected, onToggle, onAction }: {
         <div className="flex-1 min-w-0">
           <label className="flex items-center gap-[10px] cursor-pointer">
             <input type="checkbox" checked={selected} onChange={onToggle}
-              className="size-[18px] rounded-[3px] border-2 border-[#c0c6cf] cursor-pointer flex-shrink-0" />
+              className="size-[18px] rounded-[3px] cursor-pointer flex-shrink-0" style={{ accentColor: '#1360d2' }} />
             <span className="text-[17px] font-bold text-[#0e1b3d] truncate" style={{ fontFamily: font }}>{row.requestNo}</span>
           </label>
           <span className="inline-flex items-center px-[10px] py-[3px] rounded-[4px] text-[14px] font-medium mt-[8px]"

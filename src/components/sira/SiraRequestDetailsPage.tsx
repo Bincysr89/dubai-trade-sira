@@ -505,7 +505,8 @@ export default function SiraRequestDetailsPage({ journey, onBack, onHome, onNext
                         aria-label="Select all line items"
                         checked={allVisibleSelected}
                         onChange={toggleSelectAll}
-                        className="size-[18px] rounded-[3px] border-2 border-[#5a6478] cursor-pointer align-middle"
+                        className="size-[18px] rounded-[3px] cursor-pointer align-middle"
+                        style={{ accentColor: '#1360d2' }}
                       />
                     </th>
                     {orderedCols.map((col, idx) => (
@@ -555,7 +556,8 @@ export default function SiraRequestDetailsPage({ journey, onBack, onHome, onNext
                             aria-label={`Select ${row.hsCode}`}
                             checked={selectedItems.has(i)}
                             onChange={() => toggleSelect(i)}
-                            className="size-[18px] rounded-[3px] border-2 border-[#c0c6cf] cursor-pointer align-middle"
+                            className="size-[18px] rounded-[3px] cursor-pointer align-middle"
+                            style={{ accentColor: '#1360d2' }}
                           />
                         </td>
                         {orderedCols.map((col, ci) => (
