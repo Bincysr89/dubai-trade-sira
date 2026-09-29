@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import Header from '../Header';
-import { font, SiraCard, SiraSelect, SiraInput } from './SiraFields';
+import { font, SiraCard, SiraSelect, SiraInput, SiraRadioGroup } from './SiraFields';
 import {
-  REQUEST_TYPES, PRODUCT_CATEGORIES, TRANSPORTATION_METHODS, SIRA_REQUEST_TITLE,
+  REQUEST_TYPES, TRANSPORTATION_METHODS, SIRA_SERVICE_TITLE,
+  PERMIT_TYPES, HAZARDOUS_GOODS_PERMIT, categoriesFor,
 } from './siraData';
+import { CATEGORY_ICONS } from './SiraCategoryIcons';
 
 export type JourneyValues = {
+  permitType: string;
   requestType: string;
   productCategory: string;
   transportationMethod: string;
@@ -90,13 +93,19 @@ const UPDATES = [
 
 export default function SiraJourneyPage({ onBack, onHome, onProceed }: Props) {
   const [values, setValues] = useState<JourneyValues>({
+    permitType: HAZARDOUS_GOODS_PERMIT,
     requestType: 'Import Permit',
-    productCategory: 'Hazardous Goods',
+    productCategory: 'Chemical Materials',
     transportationMethod: 'Sea Freight',
     bolAwbNumber: 'BOL1211324',
   });
   const [tab, setTab] = useState('information');
   const set = (k: keyof JourneyValues, v: string) => setValues(p => ({ ...p, [k]: v }));
+  /* Switching permit type re-scopes the product category list. */
+  const setPermitType = (permitType: string) => setValues(p => ({
+    ...p, permitType, productCategory: categoriesFor(permitType)[0],
+  }));
+  const categories = categoriesFor(values.permitType);
 
   return (
     <div className="fixed inset-0 z-[60] bg-[#f8fafd] flex flex-col overflow-hidden">
@@ -121,19 +130,24 @@ export default function SiraJourneyPage({ onBack, onHome, onProceed }: Props) {
         </div>
 
         <h1 className="text-[32px] font-bold text-[#0e1b3d] mb-[18px]" style={{ fontFamily: font }}>
-          {SIRA_REQUEST_TITLE}
+          {SIRA_SERVICE_TITLE}
         </h1>
 
         {/* Request Information + Proceed */}
         <SiraCard title="Request Information">
+          {/* Permit type decides which product categories apply */}
+          <div className="mb-[26px]">
+            <SiraRadioGroup label="Permit Type" value={values.permitType} options={PERMIT_TYPES} onChange={setPermitType} />
+          </div>
+
           <div className="flex gap-[20px] items-end flex-wrap lg:flex-nowrap">
             <div className="flex-1 min-w-[200px]">
               <SiraSelect label="Request Type" value={values.requestType} options={REQUEST_TYPES}
                 onChange={v => set('requestType', v)} />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <SiraSelect label="Product Category" value={values.productCategory} options={PRODUCT_CATEGORIES}
-                onChange={v => set('productCategory', v)} />
+              <SiraSelect label="Product Category" value={values.productCategory} options={categories}
+                onChange={v => set('productCategory', v)} optionIcons={CATEGORY_ICONS} />
             </div>
             <div className="flex-1 min-w-[200px]">
               <SiraSelect label="Transportation Method" value={values.transportationMethod} options={TRANSPORTATION_METHODS}

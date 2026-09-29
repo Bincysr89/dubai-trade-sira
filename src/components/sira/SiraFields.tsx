@@ -79,10 +79,12 @@ export function SiraInput({
 
 /* ── Select / dropdown ── */
 export function SiraSelect({
-  label, value, options, onChange, required, disabled,
+  label, value, options, onChange, required, disabled, optionIcons,
 }: {
   label: string; value: string; options: string[]; onChange: (v: string) => void;
   required?: boolean; disabled?: boolean;
+  /** Optional leading icon per option, e.g. the hazardous-goods categories. */
+  optionIcons?: Record<string, React.ReactNode>;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -103,6 +105,9 @@ export function SiraSelect({
         className="h-[56px] w-full rounded-[4px] px-[12px] flex items-center gap-[6px] text-[16px] text-[#0e1b3d] bg-white focus:outline-none text-left disabled:opacity-60"
         style={{ fontFamily: font, border: `1px solid ${open ? '#1360d2' : '#d5ddfb'}` }}
       >
+        {optionIcons?.[value] && (
+          <span className="flex-shrink-0 flex items-center" style={{ color: '#1360d2' }}>{optionIcons[value]}</span>
+        )}
         <span className="flex-1 truncate">{value}</span>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#697498" strokeWidth="2.5"
           className={`flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}>
@@ -117,7 +122,7 @@ export function SiraSelect({
             const selected = opt === value;
             return (
               <button key={opt} type="button"
-                className="w-full px-[14px] py-[10px] text-left text-[16px] transition-colors"
+                className="w-full px-[14px] py-[10px] text-left text-[16px] transition-colors flex items-center gap-[10px]"
                 style={{
                   fontFamily: font,
                   background: selected ? '#1360d2' : 'transparent',
@@ -127,7 +132,11 @@ export function SiraSelect({
                 onMouseEnter={e => { if (!selected) (e.currentTarget as HTMLButtonElement).style.background = '#e2ebf9'; }}
                 onMouseLeave={e => { if (!selected) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
                 onClick={() => { onChange(opt); setOpen(false); }}>
-                {opt}
+                {optionIcons?.[opt] && (
+                  <span className="flex-shrink-0 flex items-center"
+                    style={{ color: selected ? '#fff' : '#1360d2' }}>{optionIcons[opt]}</span>
+                )}
+                <span className="flex-1 truncate">{opt}</span>
               </button>
             );
           })}
@@ -190,6 +199,38 @@ export function SiraValueUnit({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ── Radio group (permit type) ── */
+export function SiraRadioGroup({ label, value, options, onChange }: {
+  label: string; value: string; options: string[]; onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-[12px]">
+      <p className="text-[16px] text-[#0e1b3d]" style={{ fontFamily: font, fontWeight: 500 }}>{label}</p>
+      <div className="flex gap-[12px] flex-wrap">
+        {options.map(opt => {
+          const active = value === opt;
+          return (
+            <label key={opt}
+              className="flex items-center gap-[10px] px-[16px] py-[12px] rounded-[6px] cursor-pointer transition-colors"
+              style={{ background: active ? '#f0f5ff' : '#f8fafd', border: `1.5px solid ${active ? '#1360d2' : '#e6eaf5'}`, minWidth: 220 }}>
+              <span className="size-[18px] rounded-full flex-shrink-0 inline-flex items-center justify-center"
+                style={{ border: `2px solid ${active ? '#1360d2' : '#a7abb2'}`, background: '#fff' }}>
+                {active && <span className="size-[9px] rounded-full" style={{ background: '#1360d2' }} />}
+              </span>
+              <input type="radio" name={`permit-${label}`} className="sr-only" value={opt}
+                checked={active} onChange={() => onChange(opt)} />
+              <span className="text-[16px]"
+                style={{ fontFamily: font, color: active ? '#0e1b3d' : '#455174', fontWeight: active ? 500 : 400 }}>
+                {opt}
+              </span>
+            </label>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -10,7 +10,8 @@ import {
 } from './siraData';
 
 type Props = {
-  /** Chosen on the Request Details step — drives the page title. */
+  /** Chosen on the Request Details step — together they title the page. */
+  permitType: string;
   productCategory: string;
   onBack: () => void;
   onHome: () => void;
@@ -156,7 +157,7 @@ function DocActionButton({ title, onClick, tone = 'blue', children }: {
   );
 }
 
-export default function SiraAttachmentsPage({ productCategory, onBack, onHome, onPaid, onPayLater }: Props) {
+export default function SiraAttachmentsPage({ permitType, productCategory, onBack, onHome, onPaid, onPayLater }: Props) {
   const [docType, setDocType] = useState('');
   const [remarks, setRemarks] = useState('');
   const [issuedBy, setIssuedBy] = useState('');
@@ -211,7 +212,7 @@ export default function SiraAttachmentsPage({ productCategory, onBack, onHome, o
         </div>
 
         <h1 className="text-[32px] font-bold text-[#0e1b3d] mb-[18px]" style={{ fontFamily: font }}>
-          {requestTitleFor(productCategory)}
+          {requestTitleFor(permitType, productCategory)}
         </h1>
 
         <SiraStepper steps={SIRA_STEPS} current={1} />

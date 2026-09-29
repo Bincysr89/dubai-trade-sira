@@ -16,27 +16,50 @@ export const REQUEST_TYPES = [
   'Transit Permit',
   'Transport Permit',
   'Phase Permit',
-  'Sale/Purchase Approval Permit',
 ];
 
-/** Full wording used in the request title for each permit category. */
-export const PRODUCT_CATEGORY_LABELS: Record<string, string> = {
-  'Hazardous Goods': 'Hazardous Goods Chemical Materials',
-};
+/* ── Permit type — chosen first, it decides the product category list ── */
+export const GOODS_CONTROL_PERMIT = 'Good Control Permit';
+export const HAZARDOUS_GOODS_PERMIT = 'Hazardous Goods';
 
-/** Page title once the request stepper has started. */
-export function requestTitleFor(productCategory: string): string {
-  const label = PRODUCT_CATEGORY_LABELS[productCategory] ?? productCategory;
-  return `Import NOC request - ${label}`;
-}
+export const PERMIT_TYPES = [GOODS_CONTROL_PERMIT, HAZARDOUS_GOODS_PERMIT];
 
-export const PRODUCT_CATEGORIES = [
-  'Hazardous Goods',
+/** Goods Control Permit — dual-use and security products. */
+export const GOODS_CONTROL_CATEGORIES = [
   'Drone',
   'Spare Parts',
   'Other Dual Use Goods',
   'Security Product',
 ];
+
+/** Hazardous Goods — SIRA regulated dangerous-goods categories. */
+export const HAZARDOUS_CATEGORIES = [
+  'Airguns And Accessories',
+  'Armored Vehicles',
+  'Chemical Materials',
+  'Emergency Flare',
+  'Explosives',
+  'Fireworks',
+  'Military Equipment',
+  'Other Dangerous Materials',
+  'Other Hazardous Materials',
+  'Weapons And Ammunition',
+];
+
+export function categoriesFor(permitType: string): string[] {
+  return permitType === HAZARDOUS_GOODS_PERMIT ? HAZARDOUS_CATEGORIES : GOODS_CONTROL_CATEGORIES;
+}
+
+/** Page title once the request stepper has started. */
+export function requestTitleFor(permitType: string, productCategory: string): string {
+  const label = permitType === HAZARDOUS_GOODS_PERMIT
+    ? `${HAZARDOUS_GOODS_PERMIT} ${productCategory}`.trim()
+    : productCategory;
+  return `Import NOC request - ${label}`;
+}
+
+/** Every category, used where the list is only a filter (advanced search). */
+export const PRODUCT_CATEGORIES = [...GOODS_CONTROL_CATEGORIES, ...HAZARDOUS_CATEGORIES];
 
 export const TRANSPORTATION_METHODS = [
   'Sea Freight',

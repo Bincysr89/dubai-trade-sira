@@ -3,9 +3,10 @@ import Header from '../Header';
 import { ColumnFilter } from '../ColumnFilter';
 import { DhAmount } from '../Dh';
 import { useTableBehaviors, DragDots, ScrollArrows } from '../../hooks/useTableBehaviors';
-import { font, SiraCard, SiraStepper, SiraFooter, SiraSelect, SiraInput, SiraValueUnit } from './SiraFields';
+import { font, SiraCard, SiraStepper, SiraFooter, SiraSelect, SiraInput, SiraValueUnit, SiraRadioGroup } from './SiraFields';
+import { CATEGORY_ICONS } from './SiraCategoryIcons';
 import {
-  REQUEST_TYPES, PRODUCT_CATEGORIES, TRANSPORTATION_METHODS, TRANSIT_VIA_TYPES,
+  REQUEST_TYPES, PERMIT_TYPES, categoriesFor, TRANSPORTATION_METHODS, TRANSIT_VIA_TYPES,
   COUNTRIES, PORTS, DUBAI_ENTRY_PORTS, IMPORTERS, WEIGHT_UNITS,
   HS_BRANDS, HS_MODELS, HS_CATEGORIES, HS_PURPOSES,
   HS_ROWS, requestTitleFor, type HsRow,
@@ -18,7 +19,7 @@ type Props = {
   journey: JourneyValues;
   onBack: () => void;
   onHome: () => void;
-  onNext: (productCategory: string) => void;
+  onNext: (permitType: string, productCategory: string) => void;
 };
 
 type Leg = { country: string; port: string };
@@ -208,7 +209,14 @@ function TransitRouteModal({ legs, onClose, onSave }: {
    ═══════════════════════════════════════════════════════════════ */
 export default function SiraRequestDetailsPage({ journey, onBack, onHome, onNext }: Props) {
   const [requestType, setRequestType] = useState(journey.requestType);
-  const [productCategory, setProductCategory] = useState(journey.productCategory || 'Hazardous Goods');
+  const [permitType, setPermitType] = useState(journey.permitType);
+  const [productCategory, setProductCategory] = useState(journey.productCategory);
+  /* Switching permit type re-scopes the product category list. */
+  const changePermitType = (next: string) => {
+    setPermitType(next);
+    setProductCategory(categoriesFor(next)[0]);
+  };
+  const categories = categoriesFor(permitType);
   const [importer, setImporter] = useState(IMPORTERS[0]);
   const [vendor, setVendor] = useState('Astral Aerial - Nairobi');
   const [shippingCompany, setShippingCompany] = useState('Al Bait Al Mamoor Cargo Llc - Dubai');
@@ -325,16 +333,22 @@ export default function SiraRequestDetailsPage({ journey, onBack, onHome, onNext
         </div>
 
         <h1 className="text-[32px] font-bold text-[#0e1b3d] mb-[18px]" style={{ fontFamily: font }}>
-          {requestTitleFor(productCategory)}
+          {requestTitleFor(permitType, productCategory)}
         </h1>
 
         <SiraStepper steps={SIRA_STEPS} current={0} />
 
         {/* ── Request Information ── */}
         <SiraCard title="Request Information">
+          {/* Permit type decides which product categories apply */}
+          <div className="mb-[26px]">
+            <SiraRadioGroup label="Permit Type" value={permitType} options={PERMIT_TYPES} onChange={changePermitType} />
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[20px] mb-[26px]">
-            <SiraSelect label="Request Type"     value={requestType}     options={REQUEST_TYPES}     onChange={setRequestType} />
-            <SiraSelect label="Product Category" value={productCategory} options={PRODUCT_CATEGORIES} onChange={setProductCategory} />
+            <SiraSelect label="Request Type"     value={requestType}     options={REQUEST_TYPES} onChange={setRequestType} />
+            <SiraSelect label="Product Category" value={productCategory} options={categories}
+              onChange={setProductCategory} optionIcons={CATEGORY_ICONS} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px] mb-[26px]">
@@ -645,7 +659,7 @@ export default function SiraRequestDetailsPage({ journey, onBack, onHome, onNext
         </SiraCard>
       </div>
 
-      <SiraFooter onBack={onBack} primaryLabel="Next" onPrimary={() => onNext(productCategory)} />
+      <SiraFooter onBack={onBack} primaryLabel="Next" onPrimary={() => onNext(permitType, productCategory)} />
 
       {routeModal && (
         <TransitRouteModal
