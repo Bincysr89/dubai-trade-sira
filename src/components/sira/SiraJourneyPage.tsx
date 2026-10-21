@@ -19,6 +19,10 @@ type Props = {
   onBack: () => void;
   onHome: () => void;
   onProceed: (v: JourneyValues) => void;
+  serviceTitle?: string;
+  breadcrumbLabel?: string;
+  initialValues?: JourneyValues;
+  transportPermitMethods?: string[];
 };
 
 /* ── Help & Guides tabs ── */
@@ -91,8 +95,16 @@ const UPDATES = [
   { date: '18 Jun 2026', text: 'Payment advice is now generated immediately on submission.' },
 ];
 
-export default function SiraJourneyPage({ onBack, onHome, onProceed }: Props) {
-  const [values, setValues] = useState<JourneyValues>({
+export default function SiraJourneyPage({
+  onBack,
+  onHome,
+  onProceed,
+  serviceTitle = SIRA_SERVICE_TITLE,
+  breadcrumbLabel = 'SIRA - Goods Control Permit',
+  initialValues,
+  transportPermitMethods,
+}: Props) {
+  const [values, setValues] = useState<JourneyValues>(initialValues ?? {
     permitType: HAZARDOUS_GOODS_PERMIT,
     requestType: 'Import Permit',
     productCategory: 'Chemical Materials',
@@ -121,7 +133,7 @@ export default function SiraJourneyPage({ onBack, onHome, onProceed }: Props) {
             <span className="text-[#dc3545] px-[4px]">/</span>
             <span className="text-[#8f94ae] cursor-pointer hover:text-[#1360d2]" onClick={onBack}>Service Catalog</span>
             <span className="text-[#dc3545] px-[4px]">/</span>
-            <span className="text-[#111838] font-medium">SIRA - Goods Control Permit</span>
+            <span className="text-[#111838] font-medium">{breadcrumbLabel}</span>
           </div>
           <div className="px-[16px] py-[6px] rounded-[4px] text-[16px] text-[#0e1b3d]"
             style={{ background: '#e2ebf9', fontFamily: font }}>
@@ -130,32 +142,39 @@ export default function SiraJourneyPage({ onBack, onHome, onProceed }: Props) {
         </div>
 
         <h1 className="text-[32px] font-bold text-[#0e1b3d] mb-[18px]" style={{ fontFamily: font }}>
-          {SIRA_SERVICE_TITLE}
+          {serviceTitle}
         </h1>
 
         {/* Request Information + Proceed */}
-        <SiraCard title="Request Information">
+        <SiraCard>
           {/* Permit type decides which product categories apply */}
           <div className="mb-[26px]">
             <SiraRadioGroup label="Permit Type" value={values.permitType} options={PERMIT_TYPES} onChange={setPermitType} />
           </div>
 
           <div className="flex gap-[20px] items-end flex-wrap lg:flex-nowrap">
-            <div className="flex-1 min-w-[200px]">
-              <SiraSelect label="Request Type" value={values.requestType} options={REQUEST_TYPES}
-                onChange={v => set('requestType', v)} />
-            </div>
+            {!transportPermitMethods && (
+              <div className="flex-1 min-w-[200px]">
+                <SiraSelect label="Request Type" value={values.requestType} options={REQUEST_TYPES}
+                  onChange={v => set('requestType', v)} />
+              </div>
+            )}
             <div className="flex-1 min-w-[200px]">
               <SiraSelect label="Product Category" value={values.productCategory} options={categories}
                 onChange={v => set('productCategory', v)} optionIcons={CATEGORY_ICONS} />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <SiraSelect label="Transportation Method" value={values.transportationMethod} options={TRANSPORTATION_METHODS}
+              <SiraSelect
+                label={transportPermitMethods ? 'Transport Permit Method' : 'Transportation Method'}
+                value={values.transportationMethod}
+                options={transportPermitMethods ?? TRANSPORTATION_METHODS}
                 onChange={v => set('transportationMethod', v)} />
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <SiraInput label="BOL/ AWB Number" value={values.bolAwbNumber} onChange={v => set('bolAwbNumber', v)} />
-            </div>
+            {!transportPermitMethods && (
+              <div className="flex-1 min-w-[200px]">
+                <SiraInput label="BOL/ AWB Number" value={values.bolAwbNumber} onChange={v => set('bolAwbNumber', v)} />
+              </div>
+            )}
             <button
               onClick={() => onProceed(values)}
               className="h-[56px] px-[42px] rounded-[4px] text-[16px] text-white hover:opacity-90 transition-opacity flex-shrink-0"

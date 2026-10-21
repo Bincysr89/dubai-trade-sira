@@ -7,13 +7,15 @@ type Props = {
   onChange: (next: string | null) => void;
   /** Optional color map for the dot before each option */
   colorMap?: Record<string, string>;
+  /** Optional pill-style chip menu (bg/text per option) */
+  pillStyles?: Record<string, { bg: string; color: string }>;
 };
 
 /**
  * Status column header with built-in filter dropdown.
  * Click the filter icon to pick a status; rows are filtered by the parent.
  */
-export default function StatusFilterHeader({ label, options, value, onChange, colorMap }: Props) {
+export default function StatusFilterHeader({ label, options, value, onChange, colorMap, pillStyles }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -38,7 +40,28 @@ export default function StatusFilterHeader({ label, options, value, onChange, co
         <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke={value ? '#1360d2' : '#8f94ae'} strokeWidth="1.5" strokeLinecap="round"><path d="M3 4h10M5 8h6M7 12h2" /></svg>
         {value && <span className="size-[6px] rounded-full" style={{ background: '#1360d2' }} />}
       </button>
-      {open && (
+      {open && pillStyles && (
+        <div className="absolute z-[200] left-0 top-[calc(100%+6px)] w-[220px] bg-white rounded-[8px] border border-[#f0f0f5] shadow-[0px_2px_16px_0px_rgba(0,0,0,0.12)] py-[6px] flex flex-col">
+          {options.map((opt) => {
+            const st = pillStyles[opt] || { bg: '#f3f4f6', color: '#4b5563' };
+            const active = value === opt;
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => { onChange(active ? null : opt); setOpen(false); }}
+                className={`flex items-center w-full px-[10px] py-[7px] text-left transition-colors hover:bg-[#f7f8fb] ${active ? 'bg-[#f0f4ff]' : ''}`}
+              >
+                <span
+                  className="inline-flex items-center justify-center min-w-[70px] h-[20px] px-[8px] rounded-[3px] text-[11px] font-medium whitespace-nowrap"
+                  style={{ background: st.bg, color: st.color }}
+                >{opt}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {open && !pillStyles && (
         <div
           className="absolute z-[200] bg-white rounded-[8px] py-[4px] overflow-hidden"
           style={{ top: 'calc(100% + 6px)', left: 0, minWidth: 200, boxShadow: '0px 2px 16px 0px rgba(0,0,0,0.12)', border: '1px solid #f0f0f5' }}

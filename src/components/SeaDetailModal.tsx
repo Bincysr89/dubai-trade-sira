@@ -20,6 +20,8 @@ import CargoInspectionPage from './CargoInspectionPage';
 import DeclarationListPage from './DeclarationListPage';
 import CargoReconciliationPage from './discrepancy/CargoReconciliationPage';
 import CargoTrackingContainer from './cargotracking/CargoTrackingContainer';
+import SiraGoodsControlPermitFlow from './sira/SiraGoodsControlPermitFlow';
+import SiraTransportPermitFlow from './sira/SiraTransportPermitFlow';
 
 type Props = { onClose: () => void };
 
@@ -28,7 +30,8 @@ const DCAA_SIRA_SERVICES = [
   'DCAA - NOC - Dangerous Goods',
   'DCAA - Inspect Suspicious Goods',
   'DCAA - NOC - Firearms and Ammunition by Air',
-  'SIRA - Goods Control Permit',
+  'SIRA - Shipment Permit',
+  'SIRA - Transport Permit',
 ];
 
 // DM priority services shown first (and highlighted) in the Cargo Management column
@@ -295,9 +298,9 @@ const DCC_FILTER_FIELDS: AFFieldDef[] = [
   { key: 'dateTo',      label: 'Request Date To',   type: 'date' },
 ];
 
-type PageKey = 'glc' | 'jap' | 'cwl' | 'ctr' | 'rda' | 'pbf' | 'dcc' | 'cargoInspection' | 'integratedClearance' | 'cargoReconciliation' | 'tracking';
+type PageKey = 'glc' | 'jap' | 'cwl' | 'ctr' | 'rda' | 'pbf' | 'dcc' | 'cargoInspection' | 'integratedClearance' | 'cargoReconciliation' | 'tracking' | 'sira' | 'transportPermit';
 
-const PAGE_CONFIGS: Record<Exclude<PageKey, 'pbf' | 'dcc' | 'cargoInspection' | 'integratedClearance' | 'cargoReconciliation' | 'tracking' | 'ctr' | 'cwl'> | 'ctr' | 'cwl', {
+const PAGE_CONFIGS: Record<Exclude<PageKey, 'pbf' | 'dcc' | 'cargoInspection' | 'integratedClearance' | 'cargoReconciliation' | 'tracking' | 'sira' | 'transportPermit' | 'ctr' | 'cwl'> | 'ctr' | 'cwl', {
   title: string; breadcrumb: string; primaryLabel: string;
   searchLabel: string; searchPlaceholder: string; searchFields?: string[];
   advancedFilterFields?: AFFieldDef[];
@@ -365,6 +368,8 @@ const ITEM_PAGE_MAP: Record<string, PageKey> = {
   'Integrated Clearance':                 'integratedClearance',
   'Cargo Reconciliation':                 'cargoReconciliation',
   'Cargo Tracking':                       'tracking',
+  'SIRA - Shipment Permit':               'sira',
+  'SIRA - Transport Permit':              'transportPermit',
 };
 /* ── Generic Form Configs ────────────────────────────────────────────────── */
 const CTR_CONFIG: GenericServiceConfig = {
@@ -419,6 +424,12 @@ export default function SeaDetailModal({ onClose }: Props) {
   })).filter(col => !search || col.items.length > 0);
 
   /* Render a listing page when one is active */
+  if (activePage === 'sira') {
+    return <SiraGoodsControlPermitFlow onClose={() => setActivePage(null)} />;
+  }
+  if (activePage === 'transportPermit') {
+    return <SiraTransportPermitFlow onClose={() => setActivePage(null)} />;
+  }
   if (activePage === 'pbf') {
     return <BillPaymentPage onBack={() => setActivePage(null)} />;
   }
@@ -569,7 +580,7 @@ export default function SeaDetailModal({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white">
       {/* Full-page catalogue background image */}
       <div
         className="absolute inset-0"
@@ -717,15 +728,10 @@ export default function SeaDetailModal({ onClose }: Props) {
                     {col.items.map(item => {
                       const pageKey    = ITEM_PAGE_MAP[item];
                       const HIGHLIGHTED = new Set([
-                        'Integrated Clearance',
-                        'Request Goods Landing Certificate',
-                        'Bill Payment',
-                        'Request Duty Account',
-                        'Request Customs Warehouse License',
-                        'DC - Service Request',
-                        'Cargo Inspection',
                         'Cargo Reconciliation',
                         'Cargo Tracking',
+                        'SIRA - Shipment Permit',
+                        'SIRA - Transport Permit',
                       ]);
                       const TALL_ITEMS = new Set([
                         'Request Goods Landing Certificate',

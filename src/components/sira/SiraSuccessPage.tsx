@@ -8,20 +8,39 @@ type Props = {
   onHome: () => void;
   onProceedToDeclaration: () => void;
   referenceNumber?: string;
+  serviceLabel?: string;
+  journeyTitle?: string;
+  journeySubtitle?: string;
+  successTitle?: string;
+  successLines?: string[];
+  proceedLabel?: string | null;
 };
 
 export default function SiraSuccessPage({
-  onBackToListing, onHome, onProceedToDeclaration, referenceNumber = '12345678',
+  onBackToListing,
+  onHome,
+  onProceedToDeclaration,
+  referenceNumber = '12345678',
+  serviceLabel = 'SIRA - Goods Control Permit',
+  journeyTitle = 'Import Permit Request Completed',
+  journeySubtitle = "Click on 'Continue' to move to the next step for Import Process",
+  successTitle = 'NOC Submitted Successfully',
+  successLines = [
+    'Dear Customer, thank you for using the Dubai Trade Permit application.',
+    'Your request has been submitted to Dubai Police.',
+    'Please note your reference number and proceed with the payment to complete the request.',
+  ],
+  proceedLabel = 'Proceed To Customs Declaration',
 }: Props) {
-  const proceedBtn = (
+  const proceedBtn = proceedLabel ? (
     <button
       onClick={onProceedToDeclaration}
       className="h-[48px] px-[26px] rounded-[4px] text-[16px] text-white hover:opacity-90 transition-opacity"
       style={{ background: '#1360d2', fontFamily: font, fontWeight: 600 }}
     >
-      Proceed To Customs Declaration
+      {proceedLabel}
     </button>
-  );
+  ) : null;
 
   return (
     <div className="fixed inset-0 z-[60] bg-[#f8fafd] flex flex-col overflow-hidden">
@@ -34,14 +53,14 @@ export default function SiraSuccessPage({
           <span className="text-[#dc3545] px-[4px]">/</span>
           <span className="text-[#8f94ae] cursor-pointer hover:text-[#1360d2]" onClick={onBackToListing}>Service Catalog</span>
           <span className="text-[#dc3545] px-[4px]">/</span>
-          <span className="text-[#111838] font-medium">SIRA - Goods Control Permit</span>
+          <span className="text-[#111838] font-medium">{serviceLabel}</span>
         </div>
 
         <JourneyProgress
           active={1}
           percent={45}
-          title="Import Permit Request Completed"
-          subtitle="Click on 'Continue' to move to the next step for Import Process"
+          title={journeyTitle}
+          subtitle={journeySubtitle}
           button={proceedBtn}
         />
 
@@ -58,13 +77,11 @@ export default function SiraSuccessPage({
           </span>
 
           <h2 className="text-[30px] font-bold text-[#0e1b3d] mb-[24px] text-center" style={{ fontFamily: font }}>
-            NOC Submitted Successfully
+            {successTitle}
           </h2>
 
           <div className="text-[16px] text-[#5a6478] text-center leading-[28px] mb-[30px]" style={{ fontFamily: font }}>
-            <p>Dear Customer, thank you for using the Dubai Trade Permit application.</p>
-            <p>Your request has been submitted to Dubai Police.</p>
-            <p>Please note your reference number and proceed with the payment to complete the request.</p>
+            {successLines.map(line => <p key={line}>{line}</p>)}
           </div>
 
           <div className="flex items-center gap-[12px] mb-[20px]">

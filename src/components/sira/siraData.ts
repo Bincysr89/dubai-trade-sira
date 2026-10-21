@@ -14,7 +14,6 @@ export const REQUEST_TYPES = [
   'Export Permit',
   'Re-Export Permit',
   'Transit Permit',
-  'Transport Permit',
   'Phase Permit',
 ];
 
@@ -68,7 +67,7 @@ export const TRANSPORTATION_METHODS = [
   'Land Freight',
 ];
 
-export const TRANSIT_VIA_TYPES = ['Direct', 'Single', 'Multiple'];
+export const TRANSIT_VIA_TYPES = ['Direct', 'Multiple'];
 
 /* ── Basic search dropdown (Figma 102:3835) ── */
 export const SEARCH_FIELDS = ['Request Number', 'AWB/BOL Number', 'License Number'];
@@ -138,6 +137,7 @@ export const STATUS_COLORS: Record<SiraStatus, string> = {
 /* ── Listing rows ── */
 export type SiraRow = {
   requestNo: string;
+  permitType: string;
   requestType: string;
   paymentAdviceNo: string;
   importPermitNo: string;
@@ -158,8 +158,15 @@ const STATUS_CYCLE: SiraStatus[] = [
   'Draft', 'Cleared', 'Payment Pending', 'Submitted',
 ];
 
+const PERMIT_TYPE_CYCLE = [
+  GOODS_CONTROL_PERMIT, HAZARDOUS_GOODS_PERMIT, GOODS_CONTROL_PERMIT, HAZARDOUS_GOODS_PERMIT,
+  HAZARDOUS_GOODS_PERMIT, GOODS_CONTROL_PERMIT, HAZARDOUS_GOODS_PERMIT, GOODS_CONTROL_PERMIT,
+  GOODS_CONTROL_PERMIT, HAZARDOUS_GOODS_PERMIT, GOODS_CONTROL_PERMIT, HAZARDOUS_GOODS_PERMIT,
+];
+
 export const SIRA_ROWS: SiraRow[] = STATUS_CYCLE.map((status, i) => ({
   requestNo:       `GCP-2026-0001${(48 + i).toString().padStart(2, '0')}`,
+  permitType:      PERMIT_TYPE_CYCLE[i],
   requestType:     REQUEST_TYPES[i % 4],
   paymentAdviceNo: `ClearancePA-2026-784${51 + i}`,
   importPermitNo:  `IMP-2026-458${24 + i}`,

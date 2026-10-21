@@ -17,6 +17,12 @@ type Props = {
   onHome: () => void;
   onPaid: () => void;
   onPayLater: () => void;
+  serviceLabel?: string;
+  pageTitle?: string;
+  /** Override the selectable document types (e.g. Transport Permit). */
+  docOptions?: { label: string; required: boolean; nature?: string; optional?: boolean }[];
+  /** Hide the issuer / license / date fields for the selected document. */
+  hideDocDetails?: boolean;
 };
 
 const PAYMENT_ADVICE_NO = 'PA_378599';
@@ -157,7 +163,18 @@ function DocActionButton({ title, onClick, tone = 'blue', children }: {
   );
 }
 
-export default function SiraAttachmentsPage({ permitType, productCategory, onBack, onHome, onPaid, onPayLater }: Props) {
+export default function SiraAttachmentsPage({
+  permitType,
+  productCategory,
+  onBack,
+  onHome,
+  onPaid,
+  onPayLater,
+  serviceLabel = 'SIRA - Goods Control Permit',
+  pageTitle,
+  docOptions = REQUIRED_DOC_OPTIONS,
+  hideDocDetails = false,
+}: Props) {
   const [docType, setDocType] = useState('');
   const [remarks, setRemarks] = useState('');
   const [issuedBy, setIssuedBy] = useState('');
@@ -203,7 +220,7 @@ export default function SiraAttachmentsPage({ permitType, productCategory, onBac
             <span className="text-[#dc3545] px-[4px]">/</span>
             <span className="text-[#8f94ae] cursor-pointer hover:text-[#1360d2]" onClick={onBack}>Service Catalog</span>
             <span className="text-[#dc3545] px-[4px]">/</span>
-            <span className="text-[#111838] font-medium">SIRA - Goods Control Permit</span>
+            <span className="text-[#111838] font-medium">{serviceLabel}</span>
           </div>
           <div className="px-[16px] py-[6px] rounded-[4px] text-[16px] text-[#0e1b3d]"
             style={{ background: '#e2ebf9', fontFamily: font }}>
@@ -212,7 +229,7 @@ export default function SiraAttachmentsPage({ permitType, productCategory, onBac
         </div>
 
         <h1 className="text-[32px] font-bold text-[#0e1b3d] mb-[18px]" style={{ fontFamily: font }}>
-          {requestTitleFor(permitType, productCategory)}
+          {pageTitle ?? requestTitleFor(permitType, productCategory)}
         </h1>
 
         <SiraStepper steps={SIRA_STEPS} current={1} />
@@ -237,7 +254,7 @@ export default function SiraAttachmentsPage({ permitType, productCategory, onBac
                 Select Document Type <span style={{ color: '#697498', fontWeight: 400 }}>(select one)</span>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-[12px] gap-y-[8px]">
-                {REQUIRED_DOC_OPTIONS.map(doc => {
+                {docOptions.map(doc => {
                   const active = docType === doc.label;
                   const uploaded = docs.filter(u => u.type === doc.label).length;
                   return (
@@ -256,11 +273,12 @@ export default function SiraAttachmentsPage({ permitType, productCategory, onBac
                         <span className="text-[16px] leading-snug" style={{ fontFamily: font, color: active ? '#0e1b3d' : '#455174', fontWeight: active ? 500 : 400 }}>
                           {doc.required && <span style={{ color: '#dc3545', marginRight: 2 }}>*</span>}
                           {doc.label}
+                          {doc.optional && <span style={{ color: '#697498', marginLeft: 4 }}>(Optional)</span>}
                         </span>
-                        <span className="text-[14px] px-[6px] py-[1px] rounded-[4px]"
+                        {doc.nature && <span className="text-[14px] px-[6px] py-[1px] rounded-[4px]"
                           style={{ background: active ? 'rgba(19,96,210,0.10)' : '#eef1f8', color: active ? '#1360d2' : '#697498', fontWeight: 500, whiteSpace: 'nowrap' }}>
                           {doc.nature}
-                        </span>
+                        </span>}
                       </div>
                       {uploaded > 0 && (
                         <span className="text-[11px] px-[6px] py-[1px] rounded-[10px] flex-shrink-0"
@@ -275,7 +293,7 @@ export default function SiraAttachmentsPage({ permitType, productCategory, onBac
             </div>
 
             {/* Document details — only once a type is chosen */}
-            {docType ? (
+            {hideDocDetails ? null : docType ? (
               <div className="flex flex-col gap-[20px]">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-[20px]">
                   <SiraSelect label="Document Issued by" value={issuedBy} options={DOCUMENT_ISSUERS} onChange={setIssuedBy} />

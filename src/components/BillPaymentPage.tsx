@@ -308,7 +308,7 @@ const PaymentsIcon = () => (
     <circle cx="7" cy="14.5" r="1.5" fill="#1360d2" stroke="none" />
   </svg>
 );
-const MENU_ITEMS: { label: Menu; Icon: () => JSX.Element }[] = [
+const MENU_ITEMS: { label: Menu; Icon: () => React.ReactElement }[] = [
   { label: 'Overview',  Icon: DashboardIcon },
   { label: 'Accounts',  Icon: AccountsIcon  },
   { label: 'Invoices',  Icon: InvoicesIcon  },

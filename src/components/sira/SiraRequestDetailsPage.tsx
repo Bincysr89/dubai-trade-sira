@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Header from '../Header';
 import { ColumnFilter } from '../ColumnFilter';
+import { DateInput } from '../DatePicker';
 import { DhAmount } from '../Dh';
 import { useTableBehaviors, DragDots, ScrollArrows } from '../../hooks/useTableBehaviors';
 import { font, SiraCard, SiraStepper, SiraFooter, SiraSelect, SiraInput, SiraValueUnit, SiraRadioGroup } from './SiraFields';
@@ -20,6 +21,9 @@ type Props = {
   onBack: () => void;
   onHome: () => void;
   onNext: (permitType: string, productCategory: string) => void;
+  serviceLabel?: string;
+  titleFor?: (permitType: string, productCategory: string) => string;
+  transportPermitMethods?: string[];
 };
 
 type Leg = { country: string; port: string };
@@ -40,6 +44,28 @@ const HS_COLS: { key: keyof HsRow; label: string; w: number }[] = [
 const HS_STICKY_W = 110;
 /* Leading selection column. */
 const HS_CHECK_W = 52;
+const DUBAI_PORTS = [
+  'Jabel Ali',
+  'Dubai Airport',
+  'Jebel Ali Free Zone',
+  'JEBEL ALI',
+  'Al Ghuwaifat',
+  'emirates post umm',
+  'ABUDHABI AIR PORT',
+  'Port Rashid',
+  'Al Hamriya Port',
+  'Al Maktoum Airport',
+  'Al Marfa Port',
+  'Cargovillage Dubai',
+  'Sila Border',
+  'JEBEL ALI PORT',
+  'Hatta border',
+  'Khalifa Port',
+  'Al Maktoum',
+];
+const EMIRATES = ['Abu Dhabi', 'Sharjah', 'Ajman', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'];
+const EMIRATES_PORTS = ['Khalifa Port', 'Zayed Port', 'Fujairah Port', 'Khor Fakkan Port'];
+const DUBAI_STORAGES = ['BAB AL SHAMS CHEMICALS', 'RAS AL KHOR INDUSTRIAL STORAGE'];
 
 const EMPTY_ITEM: HsRow = {
   hsCode: '', goodsDescription: '', brand: '', model: '', category: '', purposeOfUse: '',
@@ -207,7 +233,15 @@ function TransitRouteModal({ legs, onClose, onSave }: {
 /* ═══════════════════════════════════════════════════════════════
    Request Details step
    ═══════════════════════════════════════════════════════════════ */
-export default function SiraRequestDetailsPage({ journey, onBack, onHome, onNext }: Props) {
+export default function SiraRequestDetailsPage({
+  journey,
+  onBack,
+  onHome,
+  onNext,
+  serviceLabel = 'SIRA - Goods Control Permit',
+  titleFor = requestTitleFor,
+  transportPermitMethods,
+}: Props) {
   const [requestType, setRequestType] = useState(journey.requestType);
   const [permitType, setPermitType] = useState(journey.permitType);
   const [productCategory, setProductCategory] = useState(journey.productCategory);
@@ -229,6 +263,28 @@ export default function SiraRequestDetailsPage({ journey, onBack, onHome, onNext
   const [transitCountry, setTransitCountry] = useState('');
   const [transitPort, setTransitPort] = useState('');
   const [entryPort, setEntryPort] = useState('Jebel Ali');
+  const [fromDubaiPort, setFromDubaiPort] = useState('Jabel Ali');
+  const [toDubaiPort, setToDubaiPort] = useState('Port Rashid');
+  const [toEmirates, setToEmirates] = useState('Abu Dhabi');
+  const [destinationPort, setDestinationPort] = useState('Khalifa Port');
+  const [destinationName, setDestinationName] = useState('');
+  const [storage, setStorage] = useState('BAB AL SHAMS CHEMICALS');
+  const [address, setAddress] = useState('RAS AL KHOR INDUSTRIAL AREA');
+  const [makaniChoice, setMakaniChoice] = useState('Makani number');
+  const [makani, setMakani] = useState('3269285283');
+  const [latitude, setLatitude] = useState('25.17433');
+  const [longitude, setLongitude] = useState('55.3398');
+  const [sendingDate, setSendingDate] = useState('2026-10-06 14:58');
+  const [shippingInvoice, setShippingInvoice] = useState('12545');
+  const isTransportPermit = !!transportPermitMethods;
+  const isDubaiPort = transportation === transportPermitMethods?.[0];
+  const isDubaiStorage = transportation === transportPermitMethods?.[1];
+  const isDubaiEvent = transportation === transportPermitMethods?.[2];
+  const isEmiratesPort = transportation === transportPermitMethods?.[3];
+  const isEmiratesStorage = transportation === transportPermitMethods?.[4];
+  const isEmiratesEvent = transportation === transportPermitMethods?.[5];
+  const isEventToDubai = transportation === transportPermitMethods?.[6];
+  const usesEventLocation = isDubaiEvent || isEmiratesEvent || isEventToDubai;
 
   const isMultiple = transitType === 'Multiple';
   const [legs, setLegs] = useState<Leg[]>([]);
@@ -324,7 +380,7 @@ export default function SiraRequestDetailsPage({ journey, onBack, onHome, onNext
             <span className="text-[#dc3545] px-[4px]">/</span>
             <span className="text-[#8f94ae] cursor-pointer hover:text-[#1360d2]" onClick={onBack}>Service Catalog</span>
             <span className="text-[#dc3545] px-[4px]">/</span>
-            <span className="text-[#111838] font-medium">SIRA - Goods Control Permit</span>
+            <span className="text-[#111838] font-medium">{serviceLabel}</span>
           </div>
           <div className="px-[16px] py-[6px] rounded-[4px] text-[16px] text-[#0e1b3d]"
             style={{ background: '#e2ebf9', fontFamily: font }}>
@@ -333,60 +389,143 @@ export default function SiraRequestDetailsPage({ journey, onBack, onHome, onNext
         </div>
 
         <h1 className="text-[32px] font-bold text-[#0e1b3d] mb-[18px]" style={{ fontFamily: font }}>
-          {requestTitleFor(permitType, productCategory)}
+          {titleFor(permitType, productCategory)}
         </h1>
 
         <SiraStepper steps={SIRA_STEPS} current={0} />
 
         {/* ── Request Information ── */}
         <SiraCard title="Request Information">
-          {/* Permit type decides which product categories apply */}
-          <div className="mb-[26px]">
-            <SiraRadioGroup label="Permit Type" value={permitType} options={PERMIT_TYPES} onChange={changePermitType} />
-          </div>
+          {isTransportPermit ? (
+            <div className="flex flex-col gap-[20px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px]">
+                <SiraInput label="Importer / Company name" value="ANBU RAJ" disabled required />
+                <SiraSelect label="Transport Permit Method" value={transportation}
+                  options={transportPermitMethods} onChange={setTransportation} required />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-[20px] mb-[26px]">
-            <SiraSelect label="Request Type"     value={requestType}     options={REQUEST_TYPES} onChange={setRequestType} />
-            <SiraSelect label="Product Category" value={productCategory} options={categories}
-              onChange={setProductCategory} optionIcons={CATEGORY_ICONS} />
-          </div>
+                {!isEventToDubai && (
+                  <SiraSelect label="From Dubai port" value={fromDubaiPort}
+                    options={DUBAI_PORTS} onChange={setFromDubaiPort} required />
+                )}
+                {isEventToDubai && (
+                  <SiraSelect label="From Emirates" value={toEmirates}
+                    options={EMIRATES} onChange={setToEmirates} required />
+                )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px] mb-[26px]">
-            <SiraSelect label="Importer" value={importer} options={IMPORTERS} onChange={setImporter} />
-            <SiraInput  label="Vendor"   value={vendor}   onChange={setVendor} />
-            <SiraInput  label="Shipping Company" value={shippingCompany} onChange={setShippingCompany} />
-            <SiraSelect label="Transportation Method" value={transportation} options={TRANSPORTATION_METHODS} onChange={setTransportation} />
-          </div>
+                {isDubaiPort && (
+                  <SiraSelect label="To Dubai port" value={toDubaiPort}
+                    options={DUBAI_PORTS} onChange={setToDubaiPort} required />
+                )}
+                {isDubaiStorage && (
+                  <SiraSelect label="To Dubai storage" value={storage}
+                    options={DUBAI_STORAGES} onChange={setStorage} required />
+                )}
+                {(isEmiratesPort || isEmiratesStorage || isEmiratesEvent) && (
+                  <SiraSelect label="To Emirates" value={toEmirates}
+                    options={EMIRATES} onChange={setToEmirates} required />
+                )}
+                {isEmiratesPort && (
+                  <SiraSelect label="Destination port" value={destinationPort}
+                    options={EMIRATES_PORTS} onChange={setDestinationPort} disabled required />
+                )}
+                {isEmiratesStorage && (
+                  <SiraInput label="To storage" value={storage} onChange={setStorage} placeholder="Search storage" disabled required />
+                )}
+                {usesEventLocation && (
+                  <SiraInput label="Destination name" value={destinationName}
+                    onChange={setDestinationName} placeholder="Enter destination name" required />
+                )}
+                {isEventToDubai && (
+                  <SiraSelect label="To Dubai port" value={toDubaiPort}
+                    options={DUBAI_PORTS} onChange={setToDubaiPort} required />
+                )}
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px] mb-[26px]">
-            <SiraInput  label="BOL /AWB" value={bol} onChange={setBol} />
-            <SiraInput  label="Shipping Invoice Number" value={invoiceNo} onChange={setInvoiceNo} />
-            <SiraSelect label="Country of Loading" value={countryLoading} options={COUNTRIES} onChange={setCountryLoading} />
-            <SiraSelect label="Port of Loading"    value={portLoading}    options={PORTS}     onChange={setPortLoading} />
-          </div>
+              {(isDubaiStorage || isEmiratesStorage || usesEventLocation) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px]">
+                  <SiraInput label="Address" value={address} onChange={setAddress} disabled={!isDubaiEvent} required />
+                  {usesEventLocation && (
+                    <div className="lg:col-span-3">
+                      <SiraRadioGroup label="Location identification" value={makaniChoice}
+                        options={['Makani number', 'No makani number']} onChange={setMakaniChoice} />
+                    </div>
+                  )}
+                  <SiraInput label="Makani number" value={makaniChoice === 'Makani number' ? makani : ''}
+                    onChange={setMakani} disabled required />
+                  {makaniChoice === 'No makani number' && (
+                    <button type="button"
+                      onClick={() => { setLatitude('25.17433'); setLongitude('55.3398'); }}
+                      className="h-[56px] rounded-[4px] bg-[#1360d2] px-[24px] text-[16px] font-semibold text-white hover:opacity-90">
+                      Get co-ordinates
+                    </button>
+                  )}
+                  <SiraInput label="Latitude" value={latitude} onChange={setLatitude} disabled required />
+                  <SiraInput label="Longitude" value={longitude} onChange={setLongitude} disabled required />
+                </div>
+              )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px]">
-            <SiraSelect label="Transit via Type" value={transitType} options={TRANSIT_VIA_TYPES} onChange={setTransitType} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px]">
+                <DateInput label="Sending date & time" value={sendingDate}
+                  onChange={setSendingDate} showTime required />
+                <SiraInput label="Shipping invoice number" value={shippingInvoice} onChange={setShippingInvoice} required />
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Permit type is read-only — it was chosen on the journey screen */}
+              <div className="mb-[26px]">
+                <p className="text-[16px] font-medium text-[#0e1b3d] mb-[10px]" style={{ fontFamily: font }}>Permit Type</p>
+                <div className="inline-flex items-center gap-[10px] px-[16px] py-[12px] rounded-[6px]"
+                  style={{ background: '#f0f5ff', border: '1.5px solid #1360d2', minWidth: 220 }}>
+                  <span className="size-[18px] rounded-full flex-shrink-0 inline-flex items-center justify-center"
+                    style={{ border: '2px solid #1360d2', background: '#fff' }}>
+                    <span className="size-[9px] rounded-full" style={{ background: '#1360d2' }} />
+                  </span>
+                  <span className="text-[16px] font-medium text-[#0e1b3d]" style={{ fontFamily: font }}>{permitType}</span>
+                </div>
+              </div>
 
-            {/* "Multiple" turns the two transit fields into editable route fields (Figma 90:6295) */}
-            {isMultiple ? (
-              <>
-                <SiraInput label="Transit via Country" value={countryRoute}
-                  onChange={() => {}} placeholder="Add the transit route"
-                  suffix={editPencil} onSuffixClick={() => setRouteModal(true)} />
-                <SiraInput label="Transit via Port" value={portRoute}
-                  onChange={() => {}} placeholder="Add the transit route"
-                  suffix={editPencil} onSuffixClick={() => setRouteModal(true)} />
-              </>
-            ) : (
-              <>
-                <SiraSelect label="Transit via Country" value={transitCountry} options={COUNTRIES} onChange={setTransitCountry} />
-                <SiraSelect label="Transit via Port"    value={transitPort}    options={PORTS}     onChange={setTransitPort} />
-              </>
-            )}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-[20px] mb-[26px]">
+                <SiraSelect label="Request Type" value={requestType} options={REQUEST_TYPES} onChange={setRequestType} />
+                <SiraSelect label="Product Category" value={productCategory} options={categories}
+                  onChange={setProductCategory} optionIcons={CATEGORY_ICONS} />
+              </div>
 
-            <SiraSelect label="Entry in via Dubai Port" value={entryPort} options={DUBAI_ENTRY_PORTS} onChange={setEntryPort} />
-          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px] mb-[26px]">
+                <SiraSelect label="Importer" value={importer} options={IMPORTERS} onChange={setImporter} />
+                <SiraInput label="Vendor" value={vendor} onChange={setVendor} />
+                <SiraInput label="Shipping Company" value={shippingCompany} onChange={setShippingCompany} />
+                <SiraSelect label="Transportation Method" value={transportation} options={TRANSPORTATION_METHODS} onChange={setTransportation} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px] mb-[26px]">
+                <SiraInput label="BOL /AWB" value={bol} onChange={setBol} />
+                <SiraInput label="Shipping Invoice Number" value={invoiceNo} onChange={setInvoiceNo} />
+                <SiraSelect label="Country of Loading" value={countryLoading} options={COUNTRIES} onChange={setCountryLoading} />
+                <SiraSelect label="Port of Loading" value={portLoading} options={PORTS} onChange={setPortLoading} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px]">
+                <SiraSelect label="Transit via Type" value={transitType} options={TRANSIT_VIA_TYPES} onChange={setTransitType} />
+                {isMultiple ? (
+                  <>
+                    <SiraInput label="Transit via Country" value={countryRoute}
+                      onChange={() => {}} placeholder="Add the transit route"
+                      suffix={editPencil} onSuffixClick={() => setRouteModal(true)} />
+                    <SiraInput label="Transit via Port" value={portRoute}
+                      onChange={() => {}} placeholder="Add the transit route"
+                      suffix={editPencil} onSuffixClick={() => setRouteModal(true)} />
+                  </>
+                ) : (
+                  <>
+                    <SiraSelect label="Transit via Country" value={transitCountry} options={COUNTRIES} onChange={setTransitCountry} />
+                    <SiraSelect label="Transit via Port" value={transitPort} options={PORTS} onChange={setTransitPort} />
+                  </>
+                )}
+                <SiraSelect label="Entry in via Dubai Port" value={entryPort} options={DUBAI_ENTRY_PORTS} onChange={setEntryPort} />
+              </div>
+            </>
+          )}
         </SiraCard>
 
         {/* ── HS Code Details ── */}

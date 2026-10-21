@@ -39,29 +39,29 @@ export const XClear = ({ onClear, right = 10 }: { onClear: (e: React.MouseEvent)
 
 /* ── Text input ── */
 export function SiraInput({
-  label, value, onChange, required, readOnly, suffix, onSuffixClick, placeholder,
+  label, value, onChange, required, readOnly, disabled, suffix, onSuffixClick, placeholder,
 }: {
   label: string; value: string; onChange?: (v: string) => void;
-  required?: boolean; readOnly?: boolean;
+  required?: boolean; readOnly?: boolean; disabled?: boolean;
   suffix?: React.ReactNode; onSuffixClick?: () => void; placeholder?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
   // A placeholder occupies the field's centre line, so the label has to stay floated.
   const active = focused || value.length > 0 || !!placeholder;
-  const showX = !!(value && hovered && onChange && !readOnly && !suffix);
+  const showX = !!(value && hovered && onChange && !readOnly && !disabled && !suffix);
   return (
     <div className="relative min-w-0" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <input
-        type="text" value={value} readOnly={readOnly} placeholder={placeholder}
+        type="text" value={value} readOnly={readOnly || disabled} disabled={disabled} placeholder={placeholder}
         onChange={e => onChange?.(e.target.value)}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-        className="h-[56px] w-full rounded-[4px] px-[12px] text-[16px] text-[#0e1b3d] focus:outline-none bg-white"
+        className={`h-[56px] w-full rounded-[4px] px-[12px] text-[16px] text-[#0e1b3d] focus:outline-none ${disabled ? 'bg-[#eceef3] cursor-not-allowed' : 'bg-white'}`}
         style={{
           fontFamily: font,
           paddingRight: suffix ? 52 : showX ? 40 : 12,
-          border: `1px solid ${focused ? '#1360d2' : '#d5ddfb'}`,
-          cursor: readOnly ? 'default' : undefined,
+          border: `1px solid ${disabled ? '#eceef3' : focused ? '#1360d2' : '#d5ddfb'}`,
+          cursor: disabled ? 'not-allowed' : readOnly ? 'default' : undefined,
         }}
       />
       <span style={labelStyle(active)}>{required && <Req />}{required ? ' ' : ''}{label}</span>
@@ -118,10 +118,10 @@ export function SiraSelect({
       {open && (
         <div className="absolute z-[300] top-[60px] left-0 w-full bg-white rounded-[8px] py-[4px] max-h-[280px] overflow-y-auto"
           style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.12)', border: '1px solid #f0f0f5' }}>
-          {options.map(opt => {
+          {options.map((opt, index) => {
             const selected = opt === value;
             return (
-              <button key={opt} type="button"
+              <button key={`${opt}-${index}`} type="button"
                 className="w-full px-[14px] py-[10px] text-left text-[16px] transition-colors flex items-center gap-[10px]"
                 style={{
                   fontFamily: font,

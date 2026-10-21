@@ -19,11 +19,16 @@ type Props = {
   onClose: () => void;
   onStartJourney: () => void;
   onViewRequest?: (row: SiraRow) => void;
+  serviceTitle?: string;
+  breadcrumbLabel?: string;
+  rows?: SiraRow[];
+  transportPermitMethods?: string[];
 };
 
 /* ── Columns (Figma 22:18635) ── */
 const COL_DEFS: (ColDef & { w: number })[] = [
   { key: 'requestNo',       label: 'Request No.',           w: 180 },
+  { key: 'permitType',      label: 'Permit Type',           w: 185 },
   { key: 'requestType',     label: 'Request Type.',         w: 175 },
   { key: 'paymentAdviceNo', label: 'Payment Advice No.',    w: 215 },
   { key: 'importPermitNo',  label: 'Import Permit No,',     w: 190 },
@@ -37,9 +42,21 @@ const COL_DEFS: (ColDef & { w: number })[] = [
 ];
 
 const DEFAULT_VISIBLE = [
-  'requestNo', 'requestType', 'paymentAdviceNo', 'importPermitNo',
+  'requestNo', 'permitType', 'requestType', 'paymentAdviceNo', 'importPermitNo',
   'fromStorage', 'toPort', 'statusDateTime', 'requestDateTime',
 ];
+
+const STATUS_FILTER_PILLS: Record<string, { bg: string; color: string }> = {
+  'Submitted':  { bg: '#e6efff', color: '#1360d2' },
+  'Processing': { bg: '#fff6e5', color: '#f5a524' },
+  'Approved':   { bg: '#e8f6ec', color: '#28a745' },
+  'Rejected':   { bg: '#fdecee', color: '#e5484d' },
+  'Cancelled':  { bg: '#eef0f3', color: '#4b5563' },
+  'Printed':    { bg: '#e8f6ec', color: '#28a745' },
+  'Not Paid':   { bg: '#fff6e5', color: '#f5a524' },
+  'Void':       { bg: '#eef0f3', color: '#4b5563' },
+};
+const STATUS_FILTER_OPTIONS = Object.keys(STATUS_FILTER_PILLS);
 
 /* Sticky block = Status (170) + Actions (90) */
 const STICKY_W = 260;
@@ -204,7 +221,15 @@ function RequestCard({ row, selected, onToggle, onAction }: {
   );
 }
 
-export default function SiraListingPage({ onClose, onStartJourney, onViewRequest }: Props) {
+export default function SiraListingPage({
+  onClose,
+  onStartJourney,
+  onViewRequest,
+  serviceTitle = SIRA_SERVICE_TITLE,
+  breadcrumbLabel = 'SIRA - Goods Control Permit',
+  rows = SIRA_ROWS,
+  transportPermitMethods,
+}: Props) {
   const [view, setView] = useState<'list' | 'card'>('list');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
@@ -215,6 +240,8 @@ export default function SiraListingPage({ onClose, onStartJourney, onViewRequest
   const [openFlyout, setOpenFlyout] = useState<number | null>(null);
   const [showColModal, setShowColModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState<SiraStatus | null>(null);
+  const [tbStatus, setTbStatus] = useState<string | null>(null);
+  const [tbStatusOpen, setTbStatusOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [statusFrom, setStatusFrom] = useState('2022-12-28');
   const [statusTo, setStatusTo] = useState('2023-01-10');
@@ -242,11 +269,25 @@ export default function SiraListingPage({ onClose, onStartJourney, onViewRequest
 
   const setAfVal = (k: string, v: string) => setAf(p => ({ ...p, [k]: v }));
   const resetAf = () => setAf({});
+  const advancedFilterFields: AFDef[] = transportPermitMethods
+    ? [
+        { key: 'productCat', label: 'Product Category', type: 'dropdown', options: PRODUCT_CATEGORIES },
+        { key: 'transport', label: 'Transport Permit Method', type: 'dropdown', options: transportPermitMethods },
+        { key: 'dateType', label: 'Date Type', type: 'dropdown', options: DATE_TYPES },
+        { key: 'dateFrom', label: 'Date Range from', type: 'date', required: true },
+        { key: 'dateTo', label: 'Date Range to', type: 'date', required: true },
+        { key: 'status', label: 'Status', type: 'dropdown', options: SIRA_STATUSES },
+        { key: 'impExp1', label: 'Importer / Exporter', type: 'dropdown', options: IMPORTERS },
+        { key: 'impExp2', label: 'Importer / Exporter', type: 'dropdown', options: IMPORTERS },
+      ]
+    : AF_FIELDS;
 
-  const filtered = SIRA_ROWS.filter(r => {
+  const filtered = rows.filter(r => {
     if (statusFilter && r.status !== statusFilter) return false;
+    if (tbStatus && r.status !== tbStatus) return false;
     if (af.requestType && r.requestType !== af.requestType) return false;
     if (af.productCat && r.productCategory !== af.productCat) return false;
+    if (af.transport && r.requestType !== af.transport) return false;
     if (af.status && r.status !== af.status) return false;
     if (af.licenseNo && r.licenseNo !== af.licenseNo) return false;
     if (!searchValue) return true;
@@ -294,11 +335,11 @@ export default function SiraListingPage({ onClose, onStartJourney, onViewRequest
             <span className="text-[#dc3545] px-[4px]">/</span>
             <span className="text-[#8f94ae] cursor-pointer hover:text-[#1360d2]" onClick={onClose}>Service Catalog</span>
             <span className="text-[#dc3545] px-[4px]">/</span>
-            <span className="text-[#111838] font-medium">SIRA - Goods Control Permit</span>
+            <span className="text-[#111838] font-medium">{breadcrumbLabel}</span>
           </div>
 
           <h1 className="text-[32px] font-bold text-[#0e1b3d] mb-[22px]" style={{ fontFamily: font }}>
-            {SIRA_SERVICE_TITLE}
+            {serviceTitle}
           </h1>
 
           {/* Toolbar */}
@@ -351,6 +392,36 @@ export default function SiraListingPage({ onClose, onStartJourney, onViewRequest
                   <path d="M12 12l5 5" stroke="#0e1b3d" strokeWidth="1.8" strokeLinecap="round" />
                 </svg>
               </div>
+            </div>
+
+            {/* Status filter (badge dropdown) */}
+            <div className="relative">
+              <button type="button" onClick={() => setTbStatusOpen(o => !o)}
+                className="h-[48px] px-[18px] flex items-center gap-[10px] bg-white rounded-[4px] border border-[#e1e4ec] text-[16px] text-[#1360d2] hover:bg-[#f7f9fd] transition-colors"
+                style={{ fontFamily: font, fontWeight: 500 }}>
+                {tbStatus ?? 'Status'}
+                <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="#1360d2" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                  className={`transition-transform ${tbStatusOpen ? 'rotate-180' : ''}`}><path d="M2.5 4.5L6 8l3.5-3.5" /></svg>
+              </button>
+              {tbStatusOpen && (
+                <>
+                  <div className="fixed inset-0 z-[190]" onClick={() => setTbStatusOpen(false)} />
+                  <div className="absolute left-0 top-[54px] z-[200] w-[220px] bg-white rounded-[8px] border border-[#f0f0f5] shadow-[0px_2px_16px_0px_rgba(0,0,0,0.12)] py-[6px] flex flex-col">
+                    {STATUS_FILTER_OPTIONS.map(opt => {
+                      const st = STATUS_FILTER_PILLS[opt];
+                      const active = tbStatus === opt;
+                      return (
+                        <button key={opt} type="button"
+                          onClick={() => { setTbStatus(active ? null : opt); setTbStatusOpen(false); setPage(1); }}
+                          className={`flex items-center w-full px-[10px] py-[7px] text-left transition-colors hover:bg-[#f7f8fb] ${active ? 'bg-[#f0f4ff]' : ''}`}>
+                          <span className="inline-flex items-center justify-center min-w-[70px] h-[20px] px-[8px] rounded-[3px] text-[11px] font-medium whitespace-nowrap"
+                            style={{ background: st.bg, color: st.color, fontFamily: font }}>{opt}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex-1" />
@@ -406,7 +477,7 @@ export default function SiraListingPage({ onClose, onStartJourney, onViewRequest
                 </svg>
               </button>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-[20px] gap-y-[24px]">
-                {AF_FIELDS.map(f => (
+                {advancedFilterFields.map(f => (
                   f.type === 'dropdown'
                     ? <SiraSelect key={f.key} label={f.label} value={af[f.key] ?? ''} options={f.options}
                         onChange={v => setAfVal(f.key, v)} required={f.required} />

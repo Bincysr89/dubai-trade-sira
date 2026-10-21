@@ -4,6 +4,7 @@ import Header from './Header';
 import planeIconSrc from '../assets/Plane (5).svg';
 import catalogueBg from '../assets/catalogue background.jpg';
 import SiraGoodsControlPermitFlow from './sira/SiraGoodsControlPermitFlow';
+import SiraTransportPermitFlow from './sira/SiraTransportPermitFlow';
 
 type Props = { onClose: () => void; onHome?: () => void };
 
@@ -14,7 +15,7 @@ const AIR_COLUMNS: { title: string; items: string[] }[] = [
   },
   {
     title: 'Carrier Management',
-    items: ['SIRA - Goods Control Permit', 'DCAA - NOC - Dangerous Goods', 'DCAA - Inspect Suspicious Goods'],
+    items: ['SIRA - Shipment Permit', 'SIRA - Transport Permit', 'DCAA - NOC - Dangerous Goods', 'DCAA - Inspect Suspicious Goods'],
   },
   {
     title: 'Cargo Management',
@@ -51,11 +52,12 @@ function Star({ filled }: { filled: boolean }) {
 }
 
 /** Services that open a working journey from the catalogue. */
-type PageKey = 'sira';
+type PageKey = 'sira' | 'transportPermit';
 const ITEM_PAGE_MAP: Record<string, PageKey> = {
-  'SIRA - Goods Control Permit': 'sira',
+  'SIRA - Shipment Permit': 'sira',
+  'SIRA - Transport Permit': 'transportPermit',
 };
-const HIGHLIGHTED = new Set(['SIRA - Goods Control Permit']);
+const HIGHLIGHTED = new Set(['SIRA - Shipment Permit', 'SIRA - Transport Permit']);
 
 export default function AirDetailModal({ onClose, onHome }: Props) {
   const [search, setSearch] = useState('');
@@ -71,9 +73,12 @@ export default function AirDetailModal({ onClose, onHome }: Props) {
   if (activePage === 'sira') {
     return <SiraGoodsControlPermitFlow onClose={() => setActivePage(null)} />;
   }
+  if (activePage === 'transportPermit') {
+    return <SiraTransportPermitFlow onClose={() => setActivePage(null)} />;
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white">
       {/* Full-page catalogue background image */}
       <div
         className="absolute inset-0"
