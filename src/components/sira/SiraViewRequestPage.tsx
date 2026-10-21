@@ -266,19 +266,9 @@ export default function SiraViewRequestPage({
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-10 pb-[32px]">
-        <div className="flex items-center gap-[14px] flex-wrap mb-[20px] mt-[4px]">
-          <h1 className="text-[28px] text-[#111838]" style={{ fontFamily: font, fontWeight: 500 }}>
-            View Request
-          </h1>
-          <span className="inline-flex items-center gap-[7px] px-[12px] py-[3px] rounded-[4px] text-[15px]"
-            style={{ background: '#eef1f8', color: '#455174', fontFamily: font }}>
-            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7">
-              <path d="M1.5 10S4.5 4.5 10 4.5 18.5 10 18.5 10 15.5 15.5 10 15.5 1.5 10 1.5 10z" strokeLinejoin="round" />
-              <circle cx="10" cy="10" r="2.6" />
-            </svg>
-            View only
-          </span>
-        </div>
+        <h1 className="text-[28px] text-[#111838] mb-[20px] mt-[4px]" style={{ fontFamily: font, fontWeight: 500 }}>
+          View Request
+        </h1>
 
         <div className="flex flex-col gap-[24px]">
           <SummaryBar requestNo={row.requestNo} status={row.status} statusStyle={st} onAmend={onAmend} />
