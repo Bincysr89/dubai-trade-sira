@@ -73,6 +73,7 @@ export default function SiraTransportPermitFlow({ onClose }: Props) {
         transportPermit
         onBackToListing={backToListing}
         onHome={onClose}
+        onAmend={() => setStep('request')}
       />
     );
   }

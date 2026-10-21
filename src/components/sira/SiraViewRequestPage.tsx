@@ -3,6 +3,9 @@ import Header from '../Header';
 import Pagination from '../Pagination';
 import { DhAmount } from '../Dh';
 import SiraDocumentViewerModal from './SiraDocumentViewerModal';
+import feedIconSrc from '../../assets/icon-request-feed.svg';
+import shareIconSrc from '../../assets/icon-share.svg';
+import printIconSrc from '../../assets/icon-print.svg';
 import { font } from './SiraFields';
 import {
   HS_ROWS, UPLOADED_DOCS, STATUS_STYLE,
@@ -17,6 +20,8 @@ type Props = {
   serviceLabel?: string;
   /** Transport permit rows describe a route rather than a shipment. */
   transportPermit?: boolean;
+  /** Leaves the read-only view for the editable request flow. */
+  onAmend?: () => void;
 };
 
 /* ──────────────────────────────────────────────────────────────
@@ -51,6 +56,57 @@ function Section({ title, badge, children }: { title: string; badge?: string; ch
       <div className="bg-white rounded-[8px] overflow-hidden"
         style={{ border: '1px solid #e8edf5', boxShadow: '1px 2px 12px rgba(0,0,0,0.06)' }}>
         {children}
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Request summary bar (Figma 1981:28178) — icon, application
+   number, status chip, and the share / print / amend actions.
+   ────────────────────────────────────────────────────────────── */
+function SummaryBar({ requestNo, status, statusStyle, onAmend }: {
+  requestNo: string;
+  status: string;
+  statusStyle: { bg: string; color: string };
+  onAmend?: () => void;
+}) {
+  const iconBtn = 'h-[48px] w-[32px] rounded-[4px] bg-white flex items-center justify-center flex-shrink-0 hover:bg-[#f0f4ff] transition-colors';
+  return (
+    <div className="bg-white rounded-[8px] p-[20px] flex items-center justify-between gap-[20px] flex-wrap"
+      style={{ filter: 'drop-shadow(0px 1px 4px rgba(0,0,0,0.04))' }}>
+      <div className="flex gap-[17px] items-center">
+        <div className="flex gap-[17px] items-center">
+          <div className="bg-white border border-[#d5ddfb] flex items-center p-[14px] rounded-[999px] flex-shrink-0">
+            <img src={feedIconSrc} alt="" width={32} height={32} />
+          </div>
+          <div className="flex flex-col gap-[8px] items-start" style={{ lineHeight: '20px' }}>
+            <span className="text-[16px]" style={{ color: '#696f83', fontFamily: font, lineHeight: '20px' }}>
+              Application Number
+            </span>
+            <span className="text-[20px]" style={{ color: '#111838', fontFamily: font, fontWeight: 500, lineHeight: '20px' }}>
+              {requestNo}
+            </span>
+          </div>
+        </div>
+        <span className="h-[24px] px-[12px] py-[4px] rounded-[4px] inline-flex items-center justify-center text-[14px] whitespace-nowrap"
+          style={{ background: statusStyle.bg, color: statusStyle.color, fontFamily: font, fontWeight: 500, lineHeight: '20px' }}>
+          {status}
+        </span>
+      </div>
+
+      <div className="flex gap-[20px] items-center justify-end">
+        <button type="button" title="Share" aria-label="Share request" className={iconBtn}>
+          <img src={shareIconSrc} alt="" width={24} height={24} />
+        </button>
+        <button type="button" title="Print" aria-label="Print request" className={iconBtn}>
+          <img src={printIconSrc} alt="" width={24} height={24} />
+        </button>
+        <button type="button" onClick={onAmend}
+          className="bg-[#1360d2] h-[48px] w-[168px] rounded-[4px] flex items-center justify-center text-white text-[16px] capitalize hover:opacity-90 transition-opacity flex-shrink-0"
+          style={{ fontFamily: font, fontWeight: 500 }}>
+          Amend
+        </button>
       </div>
     </div>
   );
@@ -157,6 +213,7 @@ export default function SiraViewRequestPage({
   row, onBackToListing, onHome,
   serviceLabel = 'SIRA - Goods Control Permit',
   transportPermit = false,
+  onAmend,
 }: Props) {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [hsPage, setHsPage] = useState(1);
@@ -192,12 +249,8 @@ export default function SiraViewRequestPage({
       <div className="flex-1 overflow-y-auto px-4 sm:px-10 pb-[32px]">
         <div className="flex items-center gap-[14px] flex-wrap mb-[20px] mt-[4px]">
           <h1 className="text-[28px] text-[#111838]" style={{ fontFamily: font, fontWeight: 500 }}>
-            View Request — {row.requestNo}
+            View Request
           </h1>
-          <span className="inline-flex items-center px-[12px] py-[3px] rounded-[4px] text-[16px] font-medium"
-            style={{ background: st.bg, color: st.color, fontFamily: font }}>
-            {row.status}
-          </span>
           <span className="inline-flex items-center gap-[7px] px-[12px] py-[3px] rounded-[4px] text-[15px]"
             style={{ background: '#eef1f8', color: '#455174', fontFamily: font }}>
             <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -209,6 +262,8 @@ export default function SiraViewRequestPage({
         </div>
 
         <div className="flex flex-col gap-[24px]">
+          <SummaryBar requestNo={row.requestNo} status={row.status} statusStyle={st} onAmend={onAmend} />
+
           {/* ── Request Information ── */}
           <Section title="Request Information">
             {fieldRows.map((group, gi) => (

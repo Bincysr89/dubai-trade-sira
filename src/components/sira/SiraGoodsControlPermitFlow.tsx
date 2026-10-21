@@ -43,6 +43,7 @@ export default function SiraGoodsControlPermitFlow({ onClose }: Props) {
         row={viewRow}
         onBackToListing={backToListing}
         onHome={onClose}
+        onAmend={() => setStep('request')}
       />
     );
   }
