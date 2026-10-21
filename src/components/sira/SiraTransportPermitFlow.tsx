@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { TRANSPORT_PERMIT_METHODS } from '../TransportPermitPage';
 import SiraAttachmentsPage from './SiraAttachmentsPage';
 import SiraJourneyPage, { type JourneyValues } from './SiraJourneyPage';
 import SiraListingPage from './SiraListingPage';
 import SiraRequestDetailsPage from './SiraRequestDetailsPage';
 import SiraSuccessPage from './SiraSuccessPage';
-import { GOODS_CONTROL_PERMIT, type SiraRow } from './siraData';
+import SiraViewRequestPage from './SiraViewRequestPage';
+import { GOODS_CONTROL_PERMIT, TRANSPORT_PERMIT_METHODS, type SiraRow } from './siraData';
 
 const TRANSPORT_DOCS = [
   { label: 'Passport',              required: true },
@@ -22,7 +22,7 @@ type Props = {
   onClose: () => void;
 };
 
-type Step = 'listing' | 'journey' | 'request' | 'attachments' | 'success';
+type Step = 'listing' | 'journey' | 'request' | 'attachments' | 'success' | 'view';
 
 const DEFAULT_JOURNEY: JourneyValues = {
   permitType: GOODS_CONTROL_PERMIT,
@@ -61,7 +61,21 @@ export default function SiraTransportPermitFlow({ onClose }: Props) {
   const [journey, setJourney] = useState<JourneyValues>(DEFAULT_JOURNEY);
   const [permitType, setPermitType] = useState(DEFAULT_JOURNEY.permitType);
   const [productCategory, setProductCategory] = useState(DEFAULT_JOURNEY.productCategory);
+  /* The row opened read-only from the listing. */
+  const [viewRow, setViewRow] = useState<SiraRow | null>(null);
   const backToListing = () => setStep('listing');
+
+  if (step === 'view' && viewRow) {
+    return (
+      <SiraViewRequestPage
+        row={viewRow}
+        serviceLabel="SIRA - Transport Permit"
+        transportPermit
+        onBackToListing={backToListing}
+        onHome={onClose}
+      />
+    );
+  }
 
   if (step === 'journey') {
     return (
@@ -146,7 +160,7 @@ export default function SiraTransportPermitFlow({ onClose }: Props) {
       transportPermitMethods={TRANSPORT_PERMIT_METHODS}
       onClose={onClose}
       onStartJourney={() => setStep('journey')}
-      onViewRequest={() => setStep('request')}
+      onViewRequest={row => { setViewRow(row); setStep('view'); }}
     />
   );
 }

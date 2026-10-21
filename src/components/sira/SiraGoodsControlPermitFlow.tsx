@@ -4,14 +4,15 @@ import SiraJourneyPage, { type JourneyValues } from './SiraJourneyPage';
 import SiraRequestDetailsPage from './SiraRequestDetailsPage';
 import SiraAttachmentsPage from './SiraAttachmentsPage';
 import SiraSuccessPage from './SiraSuccessPage';
-import { HAZARDOUS_GOODS_PERMIT } from './siraData';
+import SiraViewRequestPage from './SiraViewRequestPage';
+import { HAZARDOUS_GOODS_PERMIT, type SiraRow } from './siraData';
 
 type Props = {
   /** Return to whatever opened the service (landing page / catalogue / permits). */
   onClose: () => void;
 };
 
-type Step = 'listing' | 'journey' | 'request' | 'attachments' | 'success';
+type Step = 'listing' | 'journey' | 'request' | 'attachments' | 'success' | 'view';
 
 const DEFAULT_JOURNEY: JourneyValues = {
   permitType: HAZARDOUS_GOODS_PERMIT,
@@ -31,8 +32,20 @@ export default function SiraGoodsControlPermitFlow({ onClose }: Props) {
   /* Permit type + category chosen on the Request Details step — they title the later steps. */
   const [permitType, setPermitType] = useState(DEFAULT_JOURNEY.permitType);
   const [productCategory, setProductCategory] = useState(DEFAULT_JOURNEY.productCategory);
+  /* The row opened read-only from the listing. */
+  const [viewRow, setViewRow] = useState<SiraRow | null>(null);
 
   const backToListing = () => setStep('listing');
+
+  if (step === 'view' && viewRow) {
+    return (
+      <SiraViewRequestPage
+        row={viewRow}
+        onBackToListing={backToListing}
+        onHome={onClose}
+      />
+    );
+  }
 
   if (step === 'journey') {
     return (
@@ -82,7 +95,7 @@ export default function SiraGoodsControlPermitFlow({ onClose }: Props) {
     <SiraListingPage
       onClose={onClose}
       onStartJourney={() => setStep('journey')}
-      onViewRequest={() => setStep('request')}
+      onViewRequest={row => { setViewRow(row); setStep('view'); }}
     />
   );
 }

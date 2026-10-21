@@ -67,6 +67,32 @@ export const TRANSPORTATION_METHODS = [
   'Land Freight',
 ];
 
+/* ── Transport Permit routes ──
+   Declared here rather than in TransportPermitPage so the flow can read them
+   without importing a component (TransportPermitPage → Header →
+   ServiceCatalogueModal → AirDetailModal → the flow is a cycle, and a value
+   read at module scope inside one would hit its temporal dead zone). */
+export type TransportRouteKey =
+  | 'dubai-port'
+  | 'dubai-storage'
+  | 'dubai-event'
+  | 'emirates-port'
+  | 'emirates-storage'
+  | 'emirates-event'
+  | 'emirates-event-to-dubai';
+
+export const TRANSPORT_ROUTE_OPTIONS: { value: TransportRouteKey; label: string }[] = [
+  { value: 'dubai-port', label: 'Dubai port to Dubai Port' },
+  { value: 'dubai-storage', label: 'Dubai port to Dubai Storage' },
+  { value: 'dubai-event', label: 'Dubai port to Dubai Event Place' },
+  { value: 'emirates-port', label: 'Dubai port to Other Emirates Port' },
+  { value: 'emirates-storage', label: 'Dubai port to Other Emirates Storage' },
+  { value: 'emirates-event', label: 'Dubai port to Other Emirates Event Place' },
+  { value: 'emirates-event-to-dubai', label: 'Other Emirates Event Place to Dubai Port' },
+];
+
+export const TRANSPORT_PERMIT_METHODS = TRANSPORT_ROUTE_OPTIONS.map(o => o.label);
+
 export const TRANSIT_VIA_TYPES = ['Direct', 'Multiple'];
 
 /* ── Basic search dropdown (Figma 102:3835) ── */

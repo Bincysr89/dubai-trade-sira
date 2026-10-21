@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Header from './Header';
+import { TRANSPORT_ROUTE_OPTIONS, type TransportRouteKey } from './sira/siraData';
 
 type Props = {
   onBack: () => void;
@@ -10,14 +11,7 @@ type Props = {
   productCategory?: string;
 };
 
-type RouteKey =
-  | 'dubai-port'
-  | 'dubai-storage'
-  | 'dubai-event'
-  | 'emirates-port'
-  | 'emirates-storage'
-  | 'emirates-event'
-  | 'emirates-event-to-dubai';
+type RouteKey = TransportRouteKey;
 
 type FieldProps = {
   label: string;
@@ -29,17 +23,9 @@ type FieldProps = {
   onChange?: (value: string) => void;
 };
 
-const routeOptions: { value: RouteKey; label: string }[] = [
-  { value: 'dubai-port', label: 'Dubai port to Dubai Port' },
-  { value: 'dubai-storage', label: 'Dubai port to Dubai Storage' },
-  { value: 'dubai-event', label: 'Dubai port to Dubai Event Place' },
-  { value: 'emirates-port', label: 'Dubai port to Other Emirates Port' },
-  { value: 'emirates-storage', label: 'Dubai port to Other Emirates Storage' },
-  { value: 'emirates-event', label: 'Dubai port to Other Emirates Event Place' },
-  { value: 'emirates-event-to-dubai', label: 'Other Emirates Event Place to Dubai Port' },
-];
+const routeOptions = TRANSPORT_ROUTE_OPTIONS;
 
-export const TRANSPORT_PERMIT_METHODS = routeOptions.map(option => option.label);
+export { TRANSPORT_PERMIT_METHODS } from './sira/siraData';
 
 const dubaiPorts = ['Jebel Ali', 'Port Rashid', 'Al Hamriya Port', 'Dubai Harbour'];
 const emirates = ['Abu Dhabi', 'Sharjah', 'Ajman', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'];
