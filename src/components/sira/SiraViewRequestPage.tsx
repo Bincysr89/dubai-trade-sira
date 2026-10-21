@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../Header';
 import Pagination from '../Pagination';
+import { useTableBehaviors, ScrollArrows } from '../../hooks/useTableBehaviors';
 import { DhAmount } from '../Dh';
 import SiraDocumentViewerModal from './SiraDocumentViewerModal';
 import feedIconSrc from '../../assets/icon-request-feed.svg';
@@ -112,9 +113,20 @@ function SummaryBar({ requestNo, status, statusStyle, onAmend }: {
   );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
+/* `sticky` pins the cell to the right edge so it stays put while the rest
+   of the row scrolls — the same affordance the listing tables use. */
+const stickyCell = (width: number): React.CSSProperties => ({
+  position: 'sticky', right: 0, width, minWidth: width,
+  boxShadow: '-3px 0 6px rgba(0,0,0,0.06)', zIndex: 2,
+});
+
+function Th({ children, width, sticky }: { children: React.ReactNode; width?: number; sticky?: boolean }) {
   return (
-    <th style={{ background: '#a6c2e9', padding: '10px 14px', textAlign: 'left', borderBottom: '1px solid #e8edf5' }}>
+    <th style={{
+      background: '#a6c2e9', padding: '10px 14px', textAlign: 'left', borderBottom: '1px solid #e8edf5',
+      ...(width ? { width, minWidth: width } : null),
+      ...(sticky && width ? stickyCell(width) : null),
+    }}>
       <span className="text-[16px]" style={{ color: '#000', fontFamily: font, fontWeight: 600, whiteSpace: 'nowrap' }}>
         {children}
       </span>
@@ -122,9 +134,13 @@ function Th({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Td({ children }: { children: React.ReactNode }) {
+function Td({ children, width, sticky }: { children: React.ReactNode; width?: number; sticky?: boolean }) {
   return (
-    <td style={{ padding: '10px 14px', borderBottom: '1px solid #f0f3fa' }}>
+    <td style={{
+      padding: '10px 14px', borderBottom: '1px solid #f0f3fa',
+      ...(width ? { width, minWidth: width } : null),
+      ...(sticky && width ? { ...stickyCell(width), background: '#fff', zIndex: 1 } : null),
+    }}>
       <span className="text-[16px]" style={{ color: '#051937', fontFamily: font, whiteSpace: 'nowrap' }}>
         {children}
       </span>
@@ -182,20 +198,22 @@ const TRANSPORT_FIELDS = (row: SiraRow): { label: string; value: string }[][] =>
   ],
 ];
 
-const HS_COLS: { key: keyof HsRow; label: string }[] = [
-  { key: 'hsCode',           label: 'HS Code' },
-  { key: 'goodsDescription', label: 'Goods Description' },
-  { key: 'brand',            label: 'Brand' },
-  { key: 'model',            label: 'Model' },
-  { key: 'category',         label: 'Category' },
-  { key: 'purposeOfUse',     label: 'Purpose of Use' },
-  { key: 'valueOfGoods',     label: 'Value of Goods' },
-  { key: 'grossWeight',      label: 'Gross Weight' },
-  { key: 'netWeight',        label: 'Net Weight' },
-  { key: 'totalGrossWeight', label: 'Total Gross Weight' },
-  { key: 'countryOfOrigin',  label: 'Country of Origin' },
-  { key: 'serialNumber',     label: 'Serial Number' },
+/* Everything up to Serial Number scrolls; Serial Number stays pinned. */
+const HS_COLS: { key: keyof HsRow; label: string; w: number }[] = [
+  { key: 'hsCode',           label: 'HS Code',            w: 150 },
+  { key: 'goodsDescription', label: 'Goods Description',  w: 190 },
+  { key: 'brand',            label: 'Brand',              w: 125 },
+  { key: 'model',            label: 'Model',              w: 125 },
+  { key: 'category',         label: 'Category',           w: 140 },
+  { key: 'purposeOfUse',     label: 'Purpose of Use',     w: 165 },
+  { key: 'valueOfGoods',     label: 'Value of Goods',     w: 165 },
+  { key: 'grossWeight',      label: 'Gross Weight',       w: 155 },
+  { key: 'netWeight',        label: 'Net Weight',         w: 150 },
+  { key: 'totalGrossWeight', label: 'Total Gross Weight', w: 190 },
+  { key: 'countryOfOrigin',  label: 'Country of Origin',  w: 180 },
 ];
+const HS_SERIAL_COL = { key: 'serialNumber' as const, label: 'Serial Number', w: 170 };
+const HS_MIN_WIDTH = HS_COLS.reduce((sum, c) => sum + c.w, 0) + HS_SERIAL_COL.w;
 
 const DOC_COLS: { key: keyof UploadedDoc; label: string }[] = [
   { key: 'name', label: 'Document Name' },
@@ -216,6 +234,7 @@ export default function SiraViewRequestPage({
   onAmend,
 }: Props) {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const hsTable = useTableBehaviors();
   const [hsPage, setHsPage] = useState(1);
   const [hsPageSize, setHsPageSize] = useState(5);
 
@@ -283,30 +302,43 @@ export default function SiraViewRequestPage({
 
           {/* ── HS Code Details ── */}
           <Section title="HS Code Details" badge={`${items.length} line item${items.length !== 1 ? 's' : ''}`}>
-            <div className="px-[16px] py-[12px] overflow-x-auto">
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontFamily: font, minWidth: 1100 }}>
-                <thead>
-                  <tr>{HS_COLS.map(c => <Th key={c.key}>{c.label}</Th>)}</tr>
-                </thead>
-                <tbody>
-                  {hsPaged.map((r, i) => (
-                    <tr key={`${r.hsCode}-${i}`}>
-                      {HS_COLS.map(c => (
-                        <Td key={c.key}>
-                          {c.key === 'valueOfGoods' ? <DhAmount value={r.valueOfGoods} /> : r[c.key]}
-                        </Td>
-                      ))}
-                    </tr>
-                  ))}
-                  {items.length === 0 && (
+            {/* Serial Number stays pinned to the right while the other columns
+                scroll, with the same arrows the listing tables use. */}
+            <div className="px-[16px] py-[12px]" style={{ position: 'relative' }}>
+              <ScrollArrows
+                atStart={hsTable.atScrollStart} atEnd={hsTable.atScrollEnd}
+                onLeft={hsTable.scrollToStart} onRight={hsTable.scrollToEnd}
+                stickyWidth={HS_SERIAL_COL.w}
+              />
+              <div ref={hsTable.scrollRef} onScroll={hsTable.handleScroll} className="overflow-x-auto">
+                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontFamily: font, minWidth: HS_MIN_WIDTH }}>
+                  <thead>
                     <tr>
-                      <td colSpan={HS_COLS.length} className="text-center py-10 text-[#8f94ae] text-[16px]" style={{ fontFamily: font }}>
-                        No line items
-                      </td>
+                      {HS_COLS.map(c => <Th key={c.key} width={c.w}>{c.label}</Th>)}
+                      <Th width={HS_SERIAL_COL.w} sticky>{HS_SERIAL_COL.label}</Th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {hsPaged.map((r, i) => (
+                      <tr key={`${r.hsCode}-${i}`}>
+                        {HS_COLS.map(c => (
+                          <Td key={c.key} width={c.w}>
+                            {c.key === 'valueOfGoods' ? <DhAmount value={r.valueOfGoods} /> : r[c.key]}
+                          </Td>
+                        ))}
+                        <Td width={HS_SERIAL_COL.w} sticky>{r.serialNumber}</Td>
+                      </tr>
+                    ))}
+                    {items.length === 0 && (
+                      <tr>
+                        <td colSpan={HS_COLS.length + 1} className="text-center py-10 text-[#8f94ae] text-[16px]" style={{ fontFamily: font }}>
+                          No line items
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
             {items.length > 0 && (
               <div className="px-[16px] pb-[8px]">
